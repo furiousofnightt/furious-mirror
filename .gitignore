@@ -25,4 +25,5 @@ furious_debug.log
 
 # Recursos Pesados (Binários)
 portables/
-
+!portables/adb/
+!portables/images/
