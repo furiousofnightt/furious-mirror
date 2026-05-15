@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+
+# PyInstaller
+build/
+dist/
+# Removido *.spec para permitir versionamento do build
+
+# IDEs
+.idea/
+.vscode/
+
+# Logs e Temporários
+*.log
+furious_debug.log
+*.swp
+*.bak
+
+# Recursos Pesados (Binários)
+portables/
+

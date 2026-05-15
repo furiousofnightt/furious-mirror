@@ -1,0 +1,6 @@
+pure-python-adb
+PySDL2
+PySDL2-dll
+av
+numpy
+pyside6
