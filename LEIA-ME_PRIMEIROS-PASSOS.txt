@@ -13,8 +13,6 @@ a melhor performance e estabilidade, siga os passos abaixo:
    c) Volte para o menu principal de Configurações e procure por 'Sistema' ou 
       'Opções do Desenvolvedor'.
    d) Ative a opção 'DEPURAÇÃO USB' (USB Debugging).
-   e) (Xiaomi/Redmi) Ative também 'Instalar via USB' e 'Depuração USB 
-      (Configurações de Segurança)'.
 
 2. ESCOLHA SUA FORMA DE CONEXÃO:
 --------------------------------------------------------------------------------

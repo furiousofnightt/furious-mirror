@@ -46,12 +46,6 @@ O **Furious Mirror** é uma evolução na engenharia de espelhamento de disposit
 
 Para explorar as entranhas do projeto, consulte nossa base de conhecimento:
 
-*   [🏗️ **Arquitetura e Fluxo**](./docs/ARCHITECTURE.md): Visão macro e gestão de threads.
-*   [🌊 **Estabilidade e Performance**](./docs/STABILITY.md): Jitter buffer e precision timers.
-*   [🎬 **Pipeline de Vídeo e Toque**](./docs/PIPELINE_AND_INPUT.md): Decodificação e mapeamento.
-*   [📶 **Engenharia Wireless**](./docs/WIRELESS.md): Conexão IP e modo híbrido.
-*   [💻 **Guia do Desenvolvedor**](./docs/DEVELOPER.md): Estrutura do código e manutenção.
-*   [📖 **Guia de Operação e Build**](./docs/OPERATION.md): Como usar e compilar.
 
 ---
 

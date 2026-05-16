@@ -26,7 +26,15 @@ O log no terminal exibe informações cruciais a cada 10 segundos:
 
 ---
 
-## 3. Criando o Executável (.EXE)
+## 3. Logs e Diagnóstico
+O Furious Mirror gera logs detalhados para ajudar na identificação de problemas:
+- **Localização**: O arquivo `furious_debug.log` é criado automaticamente na mesma pasta do executável (ou na raiz do projeto em modo Dev).
+- **Conteúdo**: Registra tentativas de conexão ADB, erros de socket, mudanças de bitrate e stack traces de falhas.
+- **Dica**: Sempre anexe este arquivo ao solicitar suporte técnico.
+
+---
+
+## 4. Criando o Executável (.EXE)
 O Furious Mirror é compilado como um executável de arquivo único para portabilidade.
 
 ### Preparação
