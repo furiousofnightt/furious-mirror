@@ -21,7 +21,7 @@ Precisamos garantir que o PyInstaller inclua:
 ### 3. Configuração do Arquivo `.spec`
 Em vez de um comando gigante no terminal, criaremos um arquivo `furious-mirror.spec`. Isso permite:
 *   Definir o ícone do app.
-*   Esconder o console do Windows (opcional).
+*   Esconder o console do Windows.
 *   Gerenciar as permissões de administrador (necessário para o ADB).
 
 ---
