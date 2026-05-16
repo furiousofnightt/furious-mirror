@@ -1,0 +1,59 @@
+================================================================================
+                    FURIOUS MIRROR - GUIA DE INÍCIO RÁPIDO
+================================================================================
+
+O Furious Mirror agora suporta conexões Híbridas (USB + Wi-Fi). Para garantir 
+a melhor performance e estabilidade, siga os passos abaixo:
+
+1. PREPARAÇÃO DO CELULAR (SÓ PRECISA FAZER UMA VEZ):
+--------------------------------------------------------------------------------
+   a) Vá em 'Configurações' > 'Sobre o Telefone'.
+   b) Toque 7 vezes seguidas em 'Número da Compilação' (ou 'Build Number') até 
+      aparecer a mensagem "Você agora é um desenvolvedor".
+   c) Volte para o menu principal de Configurações e procure por 'Sistema' ou 
+      'Opções do Desenvolvedor'.
+   d) Ative a opção 'DEPURAÇÃO USB' (USB Debugging).
+   e) (Xiaomi/Redmi) Ative também 'Instalar via USB' e 'Depuração USB 
+      (Configurações de Segurança)'.
+
+2. ESCOLHA SUA FORMA DE CONEXÃO:
+--------------------------------------------------------------------------------
+
+MODO A: CONEXÃO USB (MÁXIMA PERFORMANCE)
+   - Conecte o cabo USB, aceite a permissão no celular e abra o app.
+   - Ideal para jogos e tarefas que exigem latência zero (8 Mbps estáveis).
+
+MODO B: MODO HÍBRIDO (CABO -> WI-FI) - **RECOMENDADO**
+   - 1. Conecte via USB normalmente.
+   - 2. Com o espelhamento aberto, clique com o botão DIREITO no ícone do 
+        Furious Mirror na bandeja do sistema (perto do relógio do Windows).
+   - 3. Selecione "Ativar conexão Wi-Fi (modo híbrido)".
+   - 4. O app irá configurar o celular e reconectar sem fios automaticamente.
+   - 5. Agora você pode remover o cabo USB!
+
+MODO C: CONEXÃO DIRETA POR IP (SEM CABO)
+   - Se você já ativou o Wi-Fi antes ou tem a "Depuração Sem Fio" ativa:
+   - 1. Abra o app sem o cabo conectado.
+   - 2. Quando perguntado se deseja usar Wi-Fi, clique em "SIM".
+   - 3. Digite o endereço IP do seu celular (ex: 192.168.1.15).
+
+3. GERENCIAMENTO E TRAY ICON:
+--------------------------------------------------------------------------------
+   - O ícone na bandeja do Windows (perto do relógio) é seu centro de controle.
+   - Por lá você pode alternar entre Cabo e Wi-Fi a qualquer momento sem 
+     fechar o aplicativo.
+   - Performance Otimizada: O app usa 8 Mbps fixos no cabo e 6 Mbps fixos no Wi-Fi 
+     para garantir o equilíbrio ideal entre imagem e estabilidade.
+
+DICAS DE OURO:
+--------------------------------------------------------------------------------
+- WI-FI: Para melhor experiência, use redes de 5GHz. Redes 2.4GHz podem ter 
+  pequenas oscilações devido à interferência.
+- RECONEXÃO: Se o cabo desconectar acidentalmente, o app perguntará se deseja 
+  tentar reconectar. Aceite para retomar de onde parou.
+- ADMINISTRADOR: Sempre que possível, execute o 'FuriousMirror.exe' como 
+  Administrador.
+
+--------------------------------------------------------------------------------
+         Furious Mirror - O Motor de Espelhamento de Elite para Windows
+--------------------------------------------------------------------------------
