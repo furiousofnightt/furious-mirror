@@ -13,6 +13,10 @@
   <img src="https://img.shields.io/badge/Versão-1.0.0-00f0ff?style=for-the-badge" alt="Versão">
   <img src="https://img.shields.io/badge/Plataforma-Windows-blue?style=for-the-badge" alt="Plataforma">
   <img src="https://img.shields.io/badge/Status-Estável-green?style=for-the-badge" alt="Status">
+  <br><br>
+  <a href="https://furiousmirror.pythonanywhere.com/">
+    <img src="https://img.shields.io/badge/📥_Download_Aqui-ff0000?style=for-the-badge" alt="Download">
+  </a>
 </p>
 
 ---

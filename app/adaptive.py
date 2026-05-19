@@ -1,11 +1,13 @@
 """
-adaptive.py — Controlador de Bitrate Adaptativo (ABR) do Furious Mirror.
+adaptive.py — Monitor de Performance e Bitrate do Furious Mirror.
 
-Monitora a saúde do stream de vídeo em tempo real e decide quando alternar
-entre 6 Mbps (qualidade) e 4 Mbps (estabilidade) de forma totalmente silenciosa.
+Monitora a saúde do stream de vídeo em tempo real através da taxa de frames 
+DESCARTADOS (dropped frames) e calcula o FPS.
 
-Métrica principal: taxa de frames DESCARTADOS (dropped frames).
-Quando o buffer enche continuamente, é sinal de que a rede não aguenta o bitrate atual.
+Nota de Design: Originalmente concebido como um Adaptive Bitrate (ABR) ativo, 
+atualmente opera de forma PASSIVA (apenas telemetria/logs). O bitrate foi 
+fixado em 6 Mbps (Wi-Fi) e 8 Mbps (Cabo), pois alterações dinâmicas causam 
+reconectividade no stream, prejudicando a fluidez da experiência do usuário.
 """
 import time
 import threading

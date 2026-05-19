@@ -92,11 +92,19 @@ class WirelessManager:
 
         debug_log(f"[Wireless] Tentando conexão direta ao IP: {ip_with_port}")
         res = self._run_adb(["connect", ip_with_port], timeout=10.0)
+        
+        if not (res and ("connected to" in res.stdout.lower() or "already connected" in res.stdout.lower())):
+            debug_log("[Wireless] Falha na primeira tentativa. Reiniciando ADB server...")
+            self._run_adb(["kill-server"], timeout=5.0)
+            self._run_adb(["start-server"], timeout=15.0)
+            res = self._run_adb(["connect", ip_with_port], timeout=10.0)
+
         if res and ("connected to" in res.stdout.lower() or "already connected" in res.stdout.lower()):
             self.is_wireless = True
             self.connected_ip = ip_with_port
             debug_log(f"[Wireless] Conectado com sucesso: {ip_with_port}")
             return True
+            
         debug_log(f"[Wireless] Falha: {res.stdout if res else 'timeout'}")
         return False
 
@@ -138,6 +146,13 @@ class WirelessManager:
 
         # 3. Conectar via IP
         connect_res = self._run_adb(["connect", ip_with_port])
+        
+        if not (connect_res and ("connected to" in connect_res.stdout.lower() or "already connected" in connect_res.stdout.lower())):
+            debug_log("[Wireless] Falha na primeira tentativa. Reiniciando ADB server...")
+            self._run_adb(["kill-server"], timeout=5.0)
+            self._run_adb(["start-server"], timeout=15.0)
+            connect_res = self._run_adb(["connect", ip_with_port])
+
         if connect_res and ("connected to" in connect_res.stdout.lower() or "already connected" in connect_res.stdout.lower()):
             self.is_wireless = True
             self.connected_ip = ip_with_port

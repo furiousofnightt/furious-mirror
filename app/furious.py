@@ -133,6 +133,17 @@ class FuriousMirror:
                             capture_output=True, text=True,
                             startupinfo=startupinfo, timeout=10.0
                         )
+                        
+                        if not ("connected to" in res.stdout.lower() or "already connected" in res.stdout.lower()):
+                            debug_log("[Wireless] Falha na primeira tentativa. Reiniciando ADB server...")
+                            subprocess.run([adb_path, "kill-server"], capture_output=True, startupinfo=startupinfo, timeout=5.0)
+                            subprocess.run([adb_path, "start-server"], capture_output=True, startupinfo=startupinfo, timeout=15.0)
+                            res = subprocess.run(
+                                [adb_path, "connect", ip],
+                                capture_output=True, text=True,
+                                startupinfo=startupinfo, timeout=10.0
+                            )
+
                         if "connected to" in res.stdout.lower() or "already connected" in res.stdout.lower():
                             debug_log(f"[Wireless] Conectado via IP manual: {ip}")
                             self.options.serial = ip
@@ -264,7 +275,9 @@ class FuriousMirror:
         finally:
             self.stop()
             if self.connection_lost:
-                if show_question("Furious Mirror", "A conexão com o dispositivo foi perdida.\n\nVerifique o cabo USB. Deseja tentar reconectar?"):
+                is_wifi = getattr(self.server, 'is_wireless', False)
+                msg_texto = "A conexão com o dispositivo foi perdida.\n\nVerifique a rede Wi-Fi." if is_wifi else "A conexão com o dispositivo foi perdida.\n\nVerifique o cabo USB."
+                if show_question("Furious Mirror", f"{msg_texto}\n\nDeseja tentar reconectar?"):
                     self.reconnect_requested = True
 
     def control_worker(self):
@@ -337,11 +350,11 @@ class FuriousMirror:
             msg = self.process_key_event(event)
         elif event.type == sdl2.SDL_WINDOWEVENT:
             we = event.window.event
-            if we == sdl2.SDL_WINDOWEVENT_FOCUS_LOST:
+            if we == sdl2.SDL_WINDOWEVENT_MINIMIZED:
                 self._window_focused = False
                 if self.abr:
                     self.abr.set_paused(True)
-            elif we == sdl2.SDL_WINDOWEVENT_FOCUS_GAINED:
+            elif we == sdl2.SDL_WINDOWEVENT_RESTORED:
                 self._window_focused = True
                 if self.abr:
                     self.abr.set_paused(False)
@@ -479,7 +492,7 @@ class FuriousMirror:
             except queue.Empty:
                 pass
 
-            # So renderiza quando a janela esta em foco
+            # So renderiza quando a janela nao esta minimizada
             if frame and self._window_focused:
                 self.screen.update_frame(frame)
                 if self.abr:
