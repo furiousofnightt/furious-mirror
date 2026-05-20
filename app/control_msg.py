@@ -104,8 +104,8 @@ class ControlMsg:
             
         elif self.type == ControlMsgType.INJECT_SCROLL_EVENT:
             buf.extend(struct.pack(">iiHH", self.x, self.y, self.width, self.height))
-            h = float_to_i16fp(max(-1.0, min(1.0, self.hscroll / 16.0)))
-            v = float_to_i16fp(max(-1.0, min(1.0, self.vscroll / 16.0)))
+            h = float_to_i16fp(max(-1.0, min(1.0, self.hscroll)))
+            v = float_to_i16fp(max(-1.0, min(1.0, self.vscroll)))
             buf.extend(struct.pack(">hhI", h, v, self.buttons))
             
         elif self.type == ControlMsgType.BACK_OR_SCREEN_ON:

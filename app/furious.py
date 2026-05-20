@@ -107,6 +107,20 @@ class FuriousMirror:
             debug_log(f"Error: Server failed to start ({server_status})")
             if server_status == "NO_DEVICE":
                 from .util.dialogs import ask_yes_no, ask_string
+                is_wifi_attempt = self.options.serial and "." in self.options.serial and ":" in self.options.serial
+                if is_wifi_attempt:
+                    quer_continuar = ask_yes_no(
+                        "Furious Mirror - Falha na Conexao Wi-Fi",
+                        f"Nao foi possivel reconectar no IP {self.options.serial}.\n\nDeseja continuar tentando?\n\n• SIM  ->  Continuar tentando via Wi-Fi\n• NAO  ->  Reverter para modo Cabo USB"
+                    )
+                    if quer_continuar:
+                        self.reconnect_requested = True
+                    else:
+                        self.options.serial = None
+                        self.reconnect_requested = True
+                    self.stop()
+                    return
+
                 quer_wifi = ask_yes_no(
                     "Furious Mirror - Nenhum Dispositivo",
                     "Nenhum celular encontrado via cabo USB.\n\n"
@@ -275,10 +289,7 @@ class FuriousMirror:
         finally:
             self.stop()
             if self.connection_lost:
-                is_wifi = getattr(self.server, 'is_wireless', False)
-                msg_texto = "A conexão com o dispositivo foi perdida.\n\nVerifique a rede Wi-Fi." if is_wifi else "A conexão com o dispositivo foi perdida.\n\nVerifique o cabo USB."
-                if show_question("Furious Mirror", f"{msg_texto}\n\nDeseja tentar reconectar?"):
-                    self.reconnect_requested = True
+                self.reconnect_requested = True
 
     def control_worker(self):
         while not self.stopped:
@@ -522,17 +533,13 @@ class FuriousMirror:
         if self.video_demuxer: self.video_demuxer.stop()
         if self.audio_demuxer: self.audio_demuxer.stop()
         
-        # 3. Clean up ADB in a separate thread if needed (to not block UI)
-        def cleanup_adb():
-            try:
-                # Use the already optimized path method from server
-                adb_path = self.server._get_adb_path()
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                subprocess.run([adb_path, "forward", "--remove", "tcp:27183"], capture_output=True, startupinfo=startupinfo, timeout=1.0)
-            except: pass
-            
-        threading.Thread(target=cleanup_adb, daemon=True).start()
+        # 3. Clean up ADB (sync but with short timeout to avoid blocking)
+        try:
+            adb_path = self.server._get_adb_path()
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            subprocess.run([adb_path, "forward", "--remove", "tcp:27183"], capture_output=True, startupinfo=startupinfo, timeout=1.0)
+        except: pass
         
         if self.server: self.server.stop()
         if self.screen: self.screen.close()

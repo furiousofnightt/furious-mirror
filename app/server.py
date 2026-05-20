@@ -82,6 +82,11 @@ class Server:
         last_status = "NO_DEVICE"
         for i in range(10):
             try:
+                # Tentativa ativa de reconexão se for um IP
+                if self.serial and "." in self.serial and ":" in self.serial:
+                    debug_log(f"Attempting auto-reconnect to IP: {self.serial}")
+                    run_adb(["connect", self.serial], timeout=5.0)
+
                 res = run_adb(["devices"])
                 output = res.stdout.strip()
                 debug_log(f"Attempt {i+1}: {output}")

@@ -109,21 +109,15 @@ class WirelessManager:
         return False
 
     def activate_hybrid_mode(self, usb_serial: str) -> bool:
-        """Ativa modo Wi-Fi a partir de uma conexão USB existente."""
         from run import debug_log
         debug_log(f"[Wireless] Ativando modo híbrido para {usb_serial}...")
 
-        # 1. Ativar modo tcpip no celular
-        self._run_adb(["-s", usb_serial, "tcpip", "5555"])
-        time.sleep(2.0)
-
-        # 2. Pegar o IP do celular (tentativa robusta)
-        # Tenta primeiro via 'ip route' para pegar a interface principal
+        # 1. Pegar o IP do celular (ANTAES de reiniciar o adbd, para não cair a conexão USB)
         ip = None
         res = self._run_adb(["-s", usb_serial, "shell", "ip", "route"])
         if res and res.stdout:
             # Procura por "src 192.168.x.x" ou "src 10.x.x.x"
-            match = re.search(r'src\s+(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+)', res.stdout)
+            match = re.search(r'src\s+(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(?:1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+)', res.stdout)
             if match:
                 ip = match.group(1)
 
@@ -131,18 +125,28 @@ class WirelessManager:
             # Fallback: lista todas as interfaces e procura por um IP de rede local
             res = self._run_adb(["-s", usb_serial, "shell", "ip", "-f", "inet", "addr", "show"])
             if res and res.stdout:
-                # Pega o primeiro IP que pareça ser de rede local (privado)
-                matches = re.findall(r'inet\s+(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+)', res.stdout)
+                matches = re.findall(r'inet\s+(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(?:1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+)', res.stdout)
                 if matches:
-                    # matches é uma lista de tuplas devido aos grupos do regex, pegamos o primeiro IP da primeira tupla
-                    ip = matches[0][0]
+                    ip = matches[0] if isinstance(matches[0], str) else matches[0][0]
+
+        if not ip:
+            # Último fallback
+            res = self._run_adb(["-s", usb_serial, "shell", "ip", "addr", "show", "wlan0"])
+            if res and res.stdout:
+                match = re.search(r'inet\s+(\d+\.\d+\.\d+\.\d+)', res.stdout)
+                if match:
+                    ip = match.group(1)
 
         if not ip:
             debug_log("[Wireless] Não foi possível encontrar um IP válido. O Wi-Fi do celular está ligado?")
             return False
 
         ip_with_port = f"{ip}:5555"
-        debug_log(f"[Wireless] IP detectado com sucesso: {ip_with_port}. Conectando...")
+        debug_log(f"[Wireless] IP detectado com sucesso: {ip_with_port}. Reiniciando ADB em modo TCP...")
+
+        # 2. Ativar modo tcpip no celular
+        self._run_adb(["-s", usb_serial, "tcpip", "5555"])
+        time.sleep(3.0)  # Espera o daemon voltar totalmente
 
         # 3. Conectar via IP
         connect_res = self._run_adb(["connect", ip_with_port])
@@ -158,7 +162,6 @@ class WirelessManager:
             self.connected_ip = ip_with_port
             debug_log(f"[Wireless] Modo híbrido ativo! IP: {ip_with_port}")
             return True
-
 
         debug_log(f"[Wireless] Falha ao conectar: {connect_res.stdout if connect_res else 'timeout'}")
         return False
