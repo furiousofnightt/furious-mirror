@@ -11,3 +11,4 @@ class Options:
     control: bool = True
     tunnel_forward: bool = True
     serial: str = ""
+    force_usb: bool = False

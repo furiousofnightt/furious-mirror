@@ -10,23 +10,24 @@ def ask_yes_no(title: str, message: str) -> bool:
     result = ctypes.windll.user32.MessageBoxW(0, message, title, 0x04 | 0x20)
     return result == 6  # 6 is IDYES
 
-def ask_string(title: str, message: str) -> Optional[str]:
+def ask_string(title: str, message: str, initial_value: str = "") -> Optional[str]:
     """
     Mostra uma caixa de entrada (Input) pedindo um texto.
     Usamos tkinter injetado para não depender de pacotes de terceiros pesados.
+    O campo já abre preenchido com `initial_value` se fornecido.
     """
     try:
         import tkinter as tk
         from tkinter import simpledialog
-        
+
         root = tk.Tk()
-        root.withdraw() # Oculta a janela principal
-        
+        root.withdraw()  # Oculta a janela principal
+
         # Faz a janela popup aparecer na frente de tudo
         root.attributes("-topmost", True)
-        
-        result = simpledialog.askstring(title, message, parent=root)
-        
+
+        result = simpledialog.askstring(title, message, parent=root, initialvalue=initial_value)
+
         root.destroy()
         return result
     except Exception as e:

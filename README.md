@@ -50,6 +50,15 @@ O **Furious Mirror** é uma evolução na engenharia de espelhamento de disposit
 
 Para explorar as entranhas do projeto, consulte nossa base de conhecimento:
 
+*   [Compatibilidade de Dispositivos (Device Compatibility)](docs/DEVICE_COMPATIBILITY.md) - Resultados de testes em diferentes aparelhos.
+*   [Arquitetura](docs/ARCHITECTURE.md)
+*   [Guia do Desenvolvedor](docs/DEVELOPER.md)
+*   [Engenharia](docs/ENGINEERING.md)
+*   [Operação](docs/OPERATION.md)
+*   [Pipeline e Input](docs/PIPELINE_AND_INPUT.md)
+*   [Estabilidade](docs/STABILITY.md)
+*   [Troubleshooting](docs/TROUBLESHOOTING.md)
+*   [Wireless](docs/WIRELESS.md)
 
 ---
 

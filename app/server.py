@@ -70,17 +70,18 @@ class Server:
         debug_log("Checking current ADB status...")
         try:
             res = run_adb(["devices"])
-            if 'device' not in res.stdout and 'unauthorized' not in res.stdout:
-                debug_log("No devices active. Resetting ADB server...")
+            if '\tdevice' not in res.stdout:
+                debug_log("No active devices found (or stuck in unauthorized). Resetting ADB server...")
                 run_adb(["kill-server"], timeout=5.0)
                 time.sleep(1.0)
                 run_adb(["start-server"], timeout=15.0)
+                time.sleep(1.0)
         except Exception as e:
             debug_log(f"ADB initialization warning: {e}")
 
         debug_log("Searching for authorized device...")
         last_status = "NO_DEVICE"
-        for i in range(10):
+        for i in range(8):
             try:
                 # Tentativa ativa de reconexão se for um IP
                 if self.serial and "." in self.serial and ":" in self.serial:
@@ -93,6 +94,9 @@ class Server:
                 
                 lines = output.split('\n')[1:]
                 devices = [line.split('\t')[0] for line in lines if '\tdevice' in line]
+                
+                if getattr(self.options, 'force_usb', False):
+                    devices = [d for d in devices if not ("." in d and ":" in d)]
                 
                 if devices:
                     # Prioriza o serial já configurado (ex: via Wi-Fi já conectado antes)
@@ -107,6 +111,11 @@ class Server:
                     if "." in self.serial and ":" in self.serial:
                         self.is_wireless = True
                         debug_log(f"Wireless mode detected (IP: {self.serial})")
+                    else:
+                        self.is_wireless = False
+                    
+                    if getattr(self.options, 'force_usb', False):
+                        self.options.force_usb = False
                     break
                 
                 if 'unauthorized' in output:

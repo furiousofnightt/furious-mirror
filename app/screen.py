@@ -124,6 +124,11 @@ class Screen:
             win_w = int(w * scale)
             win_h = int(h * scale)
             
+            # Restore window if it was maximized so it can resize correctly
+            flags = sdl2.SDL_GetWindowFlags(self.window)
+            if flags & sdl2.SDL_WINDOW_MAXIMIZED:
+                sdl2.SDL_RestoreWindow(self.window)
+            
             # Resize window
             sdl2.SDL_SetWindowSize(self.window, win_w, win_h)
             

@@ -5,6 +5,8 @@ import threading
 import queue
 import random
 import struct
+import os
+import json
 import sdl2
 from .options import Options
 from .server import Server
@@ -17,6 +19,39 @@ from .util.log import logger
 from .util.msgbox import show_error, show_question
 from .wireless import WirelessManager
 from .adaptive import AdaptiveBitrateController
+
+# --- Memória de último IP usado ---
+def _get_last_ip_path():
+    """Retorna o caminho do arquivo que guarda o último IP conectado."""
+    import sys
+    if getattr(sys, 'frozen', False):
+        base = os.path.dirname(sys.executable)
+    else:
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, "furious_last_ip.json")
+
+def _load_last_ip() -> str:
+    """Lê o último IP salvo. Retorna string vazia se não houver nenhum."""
+    try:
+        path = _get_last_ip_path()
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("last_ip", "")
+    except Exception:
+        pass
+    return ""
+
+def _save_last_ip(ip: str):
+    """Salva o IP que acabou de conectar com sucesso (sem a porta)."""
+    try:
+        # Remove a porta antes de salvar (ex: "192.168.0.6:5555" -> "192.168.0.6")
+        ip_only = ip.split(":")[0] if ":" in ip else ip
+        path = _get_last_ip_path()
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"last_ip": ip_only}, f)
+    except Exception:
+        pass
 
 class FuriousMirror:
     def __init__(self, options: Options):
@@ -105,6 +140,8 @@ class FuriousMirror:
             
         if server_status != "OK":
             debug_log(f"Error: Server failed to start ({server_status})")
+            if hasattr(self.options, 'force_usb'):
+                self.options.force_usb = False
             if server_status == "NO_DEVICE":
                 from .util.dialogs import ask_yes_no, ask_string
                 is_wifi_attempt = self.options.serial and "." in self.options.serial and ":" in self.options.serial
@@ -129,10 +166,14 @@ class FuriousMirror:
                     "• NAO  ->  Conectar o cabo USB e tentar novamente"
                 )
                 if quer_wifi:
+                    # Carrega o último IP usado para pré-preencher o campo
+                    ultimo_ip = _load_last_ip()
+                    hint = f"\n(Último IP usado: {ultimo_ip})" if ultimo_ip else ""
                     ip_input = ask_string(
                         "Furious Mirror - Conexao sem fio",
-                        "Digite o endereco IP do celular:\n"
-                        "(Exemplo: 192.168.1.15  ou  192.168.1.15:5555)"
+                        f"Digite o endereco IP do celular:{hint}\n"
+                        "(Exemplo: 192.168.1.15  ou  192.168.1.15:5555)",
+                        initial_value=ultimo_ip
                     )
                     if ip_input and ip_input.strip():
                         ip = ip_input.strip()
@@ -142,26 +183,49 @@ class FuriousMirror:
                         adb_path = self.server._get_adb_path()
                         startupinfo = subprocess.STARTUPINFO()
                         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                        res = subprocess.run(
-                            [adb_path, "connect", ip],
-                            capture_output=True, text=True,
-                            startupinfo=startupinfo, timeout=10.0
-                        )
-                        
-                        if not ("connected to" in res.stdout.lower() or "already connected" in res.stdout.lower()):
-                            debug_log("[Wireless] Falha na primeira tentativa. Reiniciando ADB server...")
-                            subprocess.run([adb_path, "kill-server"], capture_output=True, startupinfo=startupinfo, timeout=5.0)
-                            subprocess.run([adb_path, "start-server"], capture_output=True, startupinfo=startupinfo, timeout=15.0)
+                        try:
                             res = subprocess.run(
                                 [adb_path, "connect", ip],
                                 capture_output=True, text=True,
                                 startupinfo=startupinfo, timeout=10.0
                             )
+                        except subprocess.TimeoutExpired:
+                            debug_log(f"[Wireless] Timeout ao conectar com {ip}")
+                            res = None
+                        except Exception as e:
+                            debug_log(f"[Wireless] Erro ao conectar: {e}")
+                            res = None
 
-                        if "connected to" in res.stdout.lower() or "already connected" in res.stdout.lower():
+                        def is_success(r):
+                            if not r: return False
+                            out = r.stdout.lower()
+                            return "connected to" in out or "already connected" in out or "failed to authenticate" in out
+
+                        if not is_success(res):
+                            debug_log("[Wireless] Falha na primeira tentativa. Reiniciando ADB server...")
+                            subprocess.run([adb_path, "kill-server"], capture_output=True, startupinfo=startupinfo, timeout=5.0)
+                            time.sleep(1.0)
+                            subprocess.run([adb_path, "start-server"], capture_output=True, startupinfo=startupinfo, timeout=15.0)
+                            time.sleep(1.0)
+                            try:
+                                res = subprocess.run(
+                                    [adb_path, "connect", ip],
+                                    capture_output=True, text=True,
+                                    startupinfo=startupinfo, timeout=10.0
+                                )
+                            except subprocess.TimeoutExpired:
+                                debug_log(f"[Wireless] Timeout ao conectar com {ip} na segunda tentativa")
+                                res = None
+                            except Exception as e:
+                                debug_log(f"[Wireless] Erro ao conectar na segunda tentativa: {e}")
+                                res = None
+
+                        if is_success(res):
                             debug_log(f"[Wireless] Conectado via IP manual: {ip}")
+                            _save_last_ip(ip)  # Memoriza o IP para a próxima vez
                             self.options.serial = ip
-                            self.server.skip_kill_server = True
+                            if self.server:
+                                self.server.skip_kill_server = True
                             self.reconnect_requested = True
                             self.stop()
                             return
@@ -347,7 +411,10 @@ class FuriousMirror:
         else:
             debug_log("[Wireless] Voltando para cabo USB...")
             # Ao voltar para USB, reset do serial (auto-detecção)
+            if self.server:
+                self.server.skip_kill_server = True
             self.options.serial = None
+            self.options.force_usb = True
         self.reconnect_requested = True
         self.stopped = True
 

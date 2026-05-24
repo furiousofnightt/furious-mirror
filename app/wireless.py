@@ -93,13 +93,20 @@ class WirelessManager:
         debug_log(f"[Wireless] Tentando conexão direta ao IP: {ip_with_port}")
         res = self._run_adb(["connect", ip_with_port], timeout=10.0)
         
-        if not (res and ("connected to" in res.stdout.lower() or "already connected" in res.stdout.lower())):
+        def is_success(r):
+            if not r: return False
+            out = r.stdout.lower()
+            return "connected to" in out or "already connected" in out or "failed to authenticate" in out
+
+        if not is_success(res):
             debug_log("[Wireless] Falha na primeira tentativa. Reiniciando ADB server...")
             self._run_adb(["kill-server"], timeout=5.0)
+            time.sleep(1.0)
             self._run_adb(["start-server"], timeout=15.0)
+            time.sleep(1.0)
             res = self._run_adb(["connect", ip_with_port], timeout=10.0)
 
-        if res and ("connected to" in res.stdout.lower() or "already connected" in res.stdout.lower()):
+        if is_success(res):
             self.is_wireless = True
             self.connected_ip = ip_with_port
             debug_log(f"[Wireless] Conectado com sucesso: {ip_with_port}")
@@ -151,13 +158,20 @@ class WirelessManager:
         # 3. Conectar via IP
         connect_res = self._run_adb(["connect", ip_with_port])
         
-        if not (connect_res and ("connected to" in connect_res.stdout.lower() or "already connected" in connect_res.stdout.lower())):
+        def is_success(r):
+            if not r: return False
+            out = r.stdout.lower()
+            return "connected to" in out or "already connected" in out or "failed to authenticate" in out
+
+        if not is_success(connect_res):
             debug_log("[Wireless] Falha na primeira tentativa. Reiniciando ADB server...")
             self._run_adb(["kill-server"], timeout=5.0)
+            time.sleep(1.0)
             self._run_adb(["start-server"], timeout=15.0)
+            time.sleep(1.0)
             connect_res = self._run_adb(["connect", ip_with_port])
 
-        if connect_res and ("connected to" in connect_res.stdout.lower() or "already connected" in connect_res.stdout.lower()):
+        if is_success(connect_res):
             self.is_wireless = True
             self.connected_ip = ip_with_port
             debug_log(f"[Wireless] Modo híbrido ativo! IP: {ip_with_port}")
@@ -197,9 +211,13 @@ class WirelessManager:
 
             elif action == MENU_WIFI_IP:
                 from .util.dialogs import ask_string
+                from .furious import _load_last_ip, _save_last_ip
+                ultimo_ip = _load_last_ip()
+                hint = f"\n(Último IP usado: {ultimo_ip})" if ultimo_ip else ""
                 ip_input = ask_string(
                     "Furious Mirror - Conectar por IP",
-                    "Digite o IP e porta do celular:\n(Exemplo: 192.168.1.15 ou 192.168.1.15:5555)"
+                    f"Digite o IP e porta do celular:{hint}\n(Exemplo: 192.168.1.15 ou 192.168.1.15:5555)",
+                    initial_value=ultimo_ip
                 )
                 if not ip_input:
                     continue
@@ -207,6 +225,7 @@ class WirelessManager:
                     self.on_transition_start()
                 ok = self.connect_direct_ip(ip_input.strip())
                 if ok:
+                    _save_last_ip(self.connected_ip)  # Memoriza o IP para a próxima vez
                     self._show_msg("Wi-Fi Ativado!", f"Conexao sem fio estabelecida!\nIP: {self.connected_ip}\n\nO espelho vai reconectar automaticamente.")
                     if self.on_reconnect_callback:
                         self.on_reconnect_callback(self.connected_ip)
